@@ -1,0 +1,40 @@
+Question 1: By default, are Django signals executed synchronously or
+asynchronously? Please support your answer with a code snippet that conclusively
+proves your stance. The code does not need to be elegant and production ready, we
+just need to understand your logic.
+Ans:
+Django is a popular web framework known for its robustness, flexibility, 
+and security.One of the features that make Django powerful is its signal system. Signals allow developers 
+to trigger certain actions when specific events occur, such as when a model is saved or deleted.
+
+The answer of the above question is Yes. Django signals are executed synchronously,
+When a signal is triggered, the associated receivers are executed synchronously, meaning that each receiver must complete before the next one can begin.
+
+# models.py
+from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+import time
+
+# A simple model for demonstration
+class MyModel(models.Model):
+    name = models.CharField(max_length=100)
+
+# Signal receiver function
+@receiver(post_save, sender=MyModel)
+def my_signal_handler(sender, instance, **kwargs):
+    print("Signal handler started")
+    time.sleep(5)  # Simulate a long-running task
+    print("Signal handler finished")
+
+
+
+# Output:
+ Signal handler started
+ [5-second delay]
+ Signal handler finished
+ The create() operation will be delayed by the time.sleep(5) in the signal handler.
+
+Synchronous Execution: The my_signal_handler function starts executing right after the model instance is saved and blocks further execution until it finishes. 
+During this time, the Django shell or request is effectively stalled, which demonstrates synchronous execution. The delay introduced by time.sleep(5) means
+that the instance creation in the shell waits for the signal handler to complete.

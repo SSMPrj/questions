@@ -1,0 +1,46 @@
+Question 2: Do Django signals run in the same thread as the caller? Please support
+your answer with a code snippet that conclusively proves your stance. The code does
+not need to be elegant and production ready, we just need to understand your logic.
+Ans:
+Yes, Django signals run in the same thread as the caller. This means that when a 
+signal is emitted, its signal handlers are executed in the same thread that emitted the signal.
+
+
+# models.py
+
+from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+import threading
+
+# A simple model for demonstration
+class MyModel(models.Model):
+    name = models.CharField(max_length=100)
+
+# Signal receiver function
+@receiver(post_save, sender=MyModel)
+def my_signal_handler(sender, instance, **kwargs):
+    print(f"Signal handler running in thread: {threading.current_thread().name}")
+
+# Function to create a model instance
+def create_model_instance():
+    print(f"Creating model instance in thread: {threading.current_thread().name}")
+    MyModel.objects.create(name="Test")
+
+
+
+# Output:
+ Creating model instance in thread: TestThread
+ Signal handler running in thread: TestThread
+
+Signal Definition: We define a Django model MyModel and connect a signal handler to the post_save signal of MyModel. 
+The signal handler my_signal_handler prints the name of the current thread.
+
+Thread Creation: We define a function create_model_instance that creates an instance of MyModel.
+This function is intended to be run in a separate thread.
+
+Thread Execution: In the Django shell, we create and start a new thread to execute the create_model_instance function. 
+After starting the thread, we wait for it to finish using thread.join().
+
+Output Observation: When the model instance is created within the new thread, the signal handler prints the name of the thread it is running in. 
+The output will show that both the model instance creation and the signal handling are happening in the same thread (in this case, 'TestThread').
